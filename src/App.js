@@ -22,7 +22,13 @@ function App() {
     const reader = new FileReader()
     reader.onload = (event) => {
       const geojson = JSON.parse(event.target.result)
-      L.geoJSON(geojson).addTo(map)
+      L.geoJSON(geojson, {
+        onEachFeature: function (feature, layer) {
+          if (feature.properties && feature.properties.name) {
+            layer.bindPopup(feature.properties.name)
+          }
+        }
+      }).addTo(map)
     }
 
     reader.readAsText(file)
