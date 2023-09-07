@@ -1,6 +1,7 @@
 import './App.css';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import { kml } from '@tmcw/togeojson';
 
 function App() {
   let map // map container
@@ -41,7 +42,21 @@ function App() {
 
   const handleKML = (file) => {
     initmap()
-    //
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const kmlText = event.target.result
+      const kmlParser = new DOMParser();
+      const kmlDocument = kmlParser.parseFromString(kmlText, 'text/xml');
+      const geojson = kml(kmlDocument);
+      L.geoJSON(geojson, {
+        onEachFeature: function (feature, layer) {
+          if (feature.properties && feature.properties.name) {
+            layer.bindPopup(feature.properties.name)
+          }
+        }
+      }).addTo(map)
+    }
+    reader.readAsText(file)
   }
 
   const handleUnknownFile = (file) => {
