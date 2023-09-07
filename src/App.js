@@ -1,6 +1,7 @@
 import './App.css';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+/* global shp */
 
 function App() {
   let map // map container
@@ -36,6 +37,23 @@ function App() {
 
   const handleShapeFile = (file) => {
     initmap()
+    const reader = new FileReader()
+
+    reader.onload = (event) => {
+      const shpBuffer = event.target.result
+      console.log(shpBuffer instanceof ArrayBuffer)
+      shp(shpBuffer).then( (convGeoJson) => {
+        L.geoJSON(convGeoJson, {
+          onEachFeature: function (feature, layer) {
+            if (feature.properties && feature.properties.name) {
+              layer.bindPopup(feature.properties.name)
+            }
+          }
+        }).addTo(map)
+      }
+      )
+    }
+    reader.readAsArrayBuffer(file)
     //
   }
 
@@ -53,7 +71,8 @@ function App() {
     const file_type = selected_file.name.split('.').pop().toLowerCase()
 
     switch (file_type) {
-      case 'shp':
+      // case 'shp':
+      case 'zip':
         handleShapeFile(selected_file)
         break
       case 'json':
@@ -70,7 +89,7 @@ function App() {
 
   return (
     <>
-      <input id="upload_file" type="file" accept=".shp, .json, .kml" onChange={handleFileChange} />
+      <input id="upload_file" type="file" accept=".zip, .json, .kml" onChange={handleFileChange} />
       <div id="map"></div>
     </>
   );
