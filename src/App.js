@@ -1,6 +1,7 @@
 import './App.css';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import { kml } from '@tmcw/togeojson';
 
 function App() {
   let map // map container
@@ -19,7 +20,6 @@ function App() {
 
   const handleGeoJSON = (file) => {
     initmap()
-    console.log(file)
     const reader = new FileReader()
     reader.onload = (event) => {
       const geojson = JSON.parse(event.target.result)
@@ -41,21 +41,36 @@ function App() {
   }
 
   const handleKML = (file) => {
-    initmap()
+    initmap();
     const reader = new FileReader();
     reader.onload = (event) => {
       const kmlText = event.target.result;
-      // eslint-disable-next-line no-undef
-      const track = omnivore.kml.parse(kmlText);
-      
-      map.addLayer(track);
+      const kmlParser = new DOMParser();
+      const kmlDocument = kmlParser.parseFromString(kmlText, 'text/xml');
+      const geojson = kml(kmlDocument);
+  
+      L.geoJSON(geojson, {
+        pointToLayer: (feature, latlng) => {
+          if (feature.properties && feature.properties.icon) {
 
-      const bounds = track.getBounds();
-      map.fitBounds(bounds);
-      
-    }
-    reader.readAsText(file)
-  }
+            const icon = L.icon({
+              iconUrl: feature.properties.icon,
+              iconSize: [32, 32], 
+            });
+            return L.marker(latlng, { icon });
+          }
+          return L.circleMarker(latlng); 
+        },
+        onEachFeature: (feature, layer) => {
+          if (feature.properties && feature.properties.name) {
+            layer.bindPopup(feature.properties.name);
+          }
+        },
+      }).addTo(map);
+    };
+    reader.readAsText(file);
+  };
+  
 
   const handleUnknownFile = (file) => {
     //
