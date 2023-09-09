@@ -1,7 +1,6 @@
 import './App.css';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { kml } from '@tmcw/togeojson';
 
 function App() {
   let map // map container
@@ -20,6 +19,7 @@ function App() {
 
   const handleGeoJSON = (file) => {
     initmap()
+    console.log(file)
     const reader = new FileReader()
     reader.onload = (event) => {
       const geojson = JSON.parse(event.target.result)
@@ -41,23 +41,25 @@ function App() {
   }
 
   const handleKML = (file) => {
-    initmap()
-    const reader = new FileReader()
-    reader.onload = (event) => {
-      const kmlText = event.target.result
-      const kmlParser = new DOMParser();
-      const kmlDocument = kmlParser.parseFromString(kmlText, 'text/xml');
-      const geojson = kml(kmlDocument);
-      L.geoJSON(geojson, {
-        onEachFeature: function (feature, layer) {
-          if (feature.properties && feature.properties.name) {
-            layer.bindPopup(feature.properties.name)
-          }
-        }
-      }).addTo(map)
-    }
-    reader.readAsText(file)
-  }
+    initmap();
+
+    fetch(file)
+      .then((response) => response.text())
+      .then((kmlText) => {
+        // console.log(kmlText)
+        // console.log(file)
+        // eslint-disable-next-line no-undef
+        const track = omnivore.kml.parse(kmlText);
+
+        map.addLayer(track);
+
+        // const bounds = track.getBounds();
+        // map.fitBounds(bounds);
+      })
+      .catch((error) => {
+        console.error('Error fetching KML file:', error);
+      });
+};
 
   const handleUnknownFile = (file) => {
     //
