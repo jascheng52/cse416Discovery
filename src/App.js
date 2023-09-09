@@ -1,6 +1,7 @@
 import './App.css';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import { kml } from '@tmcw/togeojson';
 /* global shp */
 
 function App() {
@@ -58,9 +59,36 @@ function App() {
   }
 
   const handleKML = (file) => {
-    initmap()
-    //
-  }
+    initmap();
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const kmlText = event.target.result;
+      const kmlParser = new DOMParser();
+      const kmlDocument = kmlParser.parseFromString(kmlText, 'text/xml');
+      const geojson = kml(kmlDocument);
+  
+      L.geoJSON(geojson, {
+        pointToLayer: (feature, latlng) => {
+          if (feature.properties && feature.properties.icon) {
+
+            const icon = L.icon({
+              iconUrl: feature.properties.icon,
+              iconSize: [32, 32], 
+            });
+            return L.marker(latlng, { icon });
+          }
+          return L.circleMarker(latlng); 
+        },
+        onEachFeature: (feature, layer) => {
+          if (feature.properties && feature.properties.name) {
+            layer.bindPopup(feature.properties.name);
+          }
+        },
+      }).addTo(map);
+    };
+    reader.readAsText(file);
+  };
+  
 
   const handleUnknownFile = (file) => {
     //
