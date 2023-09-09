@@ -41,25 +41,21 @@ function App() {
   }
 
   const handleKML = (file) => {
-    initmap();
+    initmap()
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const kmlText = event.target.result;
+      // eslint-disable-next-line no-undef
+      const track = omnivore.kml.parse(kmlText);
+      
+      map.addLayer(track);
 
-    fetch(file)
-      .then((response) => response.text())
-      .then((kmlText) => {
-        // console.log(kmlText)
-        // console.log(file)
-        // eslint-disable-next-line no-undef
-        const track = omnivore.kml.parse(kmlText);
-
-        map.addLayer(track);
-
-        // const bounds = track.getBounds();
-        // map.fitBounds(bounds);
-      })
-      .catch((error) => {
-        console.error('Error fetching KML file:', error);
-      });
-};
+      const bounds = track.getBounds();
+      map.fitBounds(bounds);
+      
+    }
+    reader.readAsText(file)
+  }
 
   const handleUnknownFile = (file) => {
     //
