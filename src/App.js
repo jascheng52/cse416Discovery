@@ -41,20 +41,34 @@ function App() {
 
     reader.onload = (event) => {
       const shpBuffer = event.target.result
+      console.log(shpBuffer)
       console.log(shpBuffer instanceof ArrayBuffer)
       shp(shpBuffer).then( (convGeoJson) => {
         L.geoJSON(convGeoJson, {
+          style: function (feature) {
+            return {
+              color: 'pink', 
+              fillOpacity: 0.05,
+            };
+          },
           onEachFeature: function (feature, layer) {
             if (feature.properties && feature.properties.name) {
-              layer.bindPopup(feature.properties.name)
+              layer.bindPopup(feature.properties.name);
+              // Add a label to the center of each feature
+              const center = layer.getBounds().getCenter();
+              L.marker(center, {
+                icon: L.divIcon({
+                  className: 'label-icon',
+                  html: `<div>${feature.properties.name}</div>`,
+                }),
+              }).addTo(map)
             }
-          }
+          },
         }).addTo(map)
-      }
-      )
+      })
     }
-    reader.readAsArrayBuffer(file)
-    //
+  
+    reader.readAsArrayBuffer(file);
   }
 
   const handleKML = (file) => {
