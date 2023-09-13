@@ -2,6 +2,7 @@ import './App.css';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { kml } from '@tmcw/togeojson';
+import JSZip from 'jszip'
 /* global shp */
 
 function App() {
@@ -39,23 +40,52 @@ function App() {
   const handleShapeFile = (file) => {
     initmap()
     const reader = new FileReader()
+    const shpConverter = new FileReader()
 
     reader.onload = (event) => {
       const shpBuffer = event.target.result
-      console.log(shpBuffer instanceof ArrayBuffer)
       shp(shpBuffer).then( (convGeoJson) => {
         L.geoJSON(convGeoJson, {
+          style: function (feature) {
+            return {
+              color: 'pink', 
+              fillOpacity: 0.05,
+            };
+          },
           onEachFeature: function (feature, layer) {
             if (feature.properties && feature.properties.name) {
-              layer.bindPopup(feature.properties.name)
+              layer.bindPopup(feature.properties.name);
+              // Add a label to the center of each feature
+              const center = layer.getBounds().getCenter();
+              L.marker(center, {
+                icon: L.divIcon({
+                  className: 'label-icon',
+                  html: `<div>${feature.properties.name}</div>`,
+                }),
+              }).addTo(map)
             }
-          }
+          },
         }).addTo(map)
+      })
+    }
+    shpConverter.onload = (event) => {
+      const shpBufferZip = event.target.result
+      const zip = new JSZip();
+      zip.file(file.name, shpBufferZip)
+      zip.generateAsync({type: 'blob'})
+      .then((blob) =>{
+        reader.readAsArrayBuffer(blob)
       }
       )
     }
-    reader.readAsArrayBuffer(file)
-    //
+
+    /*Library only accepts zip files so if given individual shp convers it to zip first */
+    if(file.name.split('.').pop().toLowerCase() == "shp")
+      shpConverter.readAsArrayBuffer(file)
+    else
+      reader.readAsArrayBuffer(file)
+    
+    
   }
 
   const handleKML = (file) => {
@@ -103,6 +133,9 @@ function App() {
       case 'zip':
         handleShapeFile(selected_file)
         break
+      case 'shp':
+        handleShapeFile(selected_file)
+        break
       case 'json':
         handleGeoJSON(selected_file)
         break
@@ -117,7 +150,7 @@ function App() {
 
   return (
     <>
-      <input id="upload_file" type="file" accept=".zip, .json, .kml" onChange={handleFileChange} />
+      <input id="upload_file" type="file" accept=".zip, .json, .kml, .shp" onChange={handleFileChange} />
       <div id="map"></div>
     </>
   );
