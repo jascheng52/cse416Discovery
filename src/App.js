@@ -47,7 +47,7 @@ function App() {
     reader.onload = (event) => {
       const shpBuffer = event.target.result
       shp(shpBuffer).then((convGeoJson) => {
-        L.geoJSON(convGeoJson, {
+        const geojson_layer = L.geoJSON(convGeoJson, {
           style: function (feature) {
             return {
               color: 'pink',
@@ -68,7 +68,9 @@ function App() {
             }
           },
         }).addTo(map)
+        map.fitBounds(geojson_layer.getBounds())
       })
+      
     }
     shpConverter.onload = (event) => {
       const shpBufferZip = event.target.result
@@ -99,7 +101,7 @@ function App() {
       const kmlDocument = kmlParser.parseFromString(kmlText, 'text/xml');
       const geojson = kml(kmlDocument);
 
-      L.geoJSON(geojson, {
+      const geojson_layer = L.geoJSON(geojson, {
         pointToLayer: (feature, latlng) => {
           if (feature.properties && feature.properties.icon) {
 
@@ -117,6 +119,7 @@ function App() {
           }
         },
       }).addTo(map);
+      map.fitBounds(geojson_layer.getBounds())
     };
     reader.readAsText(file);
   };

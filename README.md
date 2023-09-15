@@ -3,9 +3,15 @@
 ### This application utilizes the Leaflet library to render map graphics from GIS vector formats, including borders and textual labels. The following file formats are supported:
 
 1. .json
-2. .zip
+2. .shp and .dbf in .zip or .shp 
 3. .kml
-4. .shp
+
+# External Libraries
+1. Leaflet
+2. JSZip
+3. Shapefile.js (external script)
+4. Togeojson
+
 
 [!NOTE]
 .shp files will be converted to .zip files for map rendering
