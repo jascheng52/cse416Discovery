@@ -25,13 +25,15 @@ function App() {
     const reader = new FileReader()
     reader.onload = (event) => {
       const geojson = JSON.parse(event.target.result)
-      L.geoJSON(geojson, {
+      const geojson_layer = L.geoJSON(geojson, {
         onEachFeature: function (feature, layer) {
           if (feature.properties && feature.properties.name) {
             layer.bindPopup(feature.properties.name)
           }
         }
       }).addTo(map)
+
+      map.fitBounds(geojson_layer.getBounds())
     }
 
     reader.readAsText(file)
@@ -44,11 +46,11 @@ function App() {
 
     reader.onload = (event) => {
       const shpBuffer = event.target.result
-      shp(shpBuffer).then( (convGeoJson) => {
+      shp(shpBuffer).then((convGeoJson) => {
         L.geoJSON(convGeoJson, {
           style: function (feature) {
             return {
-              color: 'pink', 
+              color: 'pink',
               fillOpacity: 0.05,
             };
           },
@@ -72,20 +74,20 @@ function App() {
       const shpBufferZip = event.target.result
       const zip = new JSZip();
       zip.file(file.name, shpBufferZip)
-      zip.generateAsync({type: 'blob'})
-      .then((blob) =>{
-        reader.readAsArrayBuffer(blob)
-      }
-      )
+      zip.generateAsync({ type: 'blob' })
+        .then((blob) => {
+          reader.readAsArrayBuffer(blob)
+        }
+        )
     }
 
     /*Library only accepts zip files so if given individual shp convers it to zip first */
-    if(file.name.split('.').pop().toLowerCase() == "shp")
+    if (file.name.split('.').pop().toLowerCase() == "shp")
       shpConverter.readAsArrayBuffer(file)
     else
       reader.readAsArrayBuffer(file)
-    
-    
+
+
   }
 
   const handleKML = (file) => {
@@ -96,18 +98,18 @@ function App() {
       const kmlParser = new DOMParser();
       const kmlDocument = kmlParser.parseFromString(kmlText, 'text/xml');
       const geojson = kml(kmlDocument);
-  
+
       L.geoJSON(geojson, {
         pointToLayer: (feature, latlng) => {
           if (feature.properties && feature.properties.icon) {
 
             const icon = L.icon({
               iconUrl: feature.properties.icon,
-              iconSize: [32, 32], 
+              iconSize: [32, 32],
             });
             return L.marker(latlng, { icon });
           }
-          return L.circleMarker(latlng); 
+          return L.circleMarker(latlng);
         },
         onEachFeature: (feature, layer) => {
           if (feature.properties && feature.properties.name) {
@@ -118,7 +120,7 @@ function App() {
     };
     reader.readAsText(file);
   };
-  
+
 
   const handleUnknownFile = (file) => {
     //
